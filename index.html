@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PyDiff Pro - Professional Python Code Comparison Tool</title>
+  <meta name="description" content="Professional Python code comparison and indentation analysis tool for developers">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      /* Main color scheme */
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --primary-light: #60a5fa;
+      --secondary: #10b981;
+      --accent: #8b5cf6;
+      
+      /* UI colors */
+      --bg-main: #ffffff;
+      --bg-dark: #f3f4f6;
+      --bg-darker: #e5e7eb;
+      --bg-code: #f8fafc;
+      --bg-editor: #ffffff;
+      
+      /* Dark mode colors */
+      --dm-bg-main: #0f172a;
+      --dm-bg-dark: #1e293b;
+      --dm-bg-darker: #334155;
+      --dm-bg-code: #1e293b;
+      --dm-bg-editor: #0f172a;
+      
+      /* Text colors */
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
+      --text-light: #9ca3af;
+      --text-white: #f9fafb;
+      
+      /* Border colors */
+      --border-light: #e5e7eb;
+      --border-medium: #d1d5db;
+      --border-dark: #9ca3af;
+      
+      /* Functional colors */
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --info: #3b82f6;
+      
+      /* Spacing */
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-12: 3rem;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-main: var(--dm-bg-main);
+        --bg-dark: var(--dm-bg-dark);
+        --bg-darker: var(--dm-bg-darker);
+        --bg-code: var(--dm-bg-code);
+        --bg-editor: var(--dm-bg-editor);
+        --text-primary: var(--text-white);
+        --text-secondary: #e5e7eb;
+        --border-light: #334155;
+        --border-medium: #475569;
+      }
+    }
+    
+    .dark {
+      --bg-main: var(--dm-bg-main);
+      --bg-dark: var(--dm-bg-dark);
+      --bg-darker: var(--dm-bg-darker);
+      --bg-code: var(--dm-bg-code);
+      --bg-editor: var(--dm-bg-editor);
+      --text-primary: var(--text-white);
+      --text-secondary: #e5e7eb;
+      --border-light: #334155;
+      --border-medium: #475569;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 80px;
+    }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      height: auto;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    /* Header styles */
+    header {
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border-light);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .brand i {
+      font-size: 1.25rem;
+    }
+    
+    .tagline {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-left: var(--space-2);
+      display: none;
+    }
+    
+    @media (min-width: 768px) {
+      .tagline {
+        display: inline;
+      }
+    }
+    
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    
+    /* Button styles */
+    button, .btn {
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      border: 1px solid var(--border-medium);
+      padding: var(--space-2) var(--space-3);
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-1);
+      min-height: 2.25rem;
+    }
+    
+    button:hover, .btn:hover {
+      background: var(--bg-darker);
+      border-color: var(--border-dark);
+    }
+    
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+    
+    .btn-outline:hover {
+      background: var(--hover-bg);
+      color: var(--text-color);
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--secondary);
+      filter: brightness(0.9);
+    }
+    
+    .btn-icon {
+      padding: var(--space-2);
+      border-radius: 0.375rem;
+    }
+    
+    /* Main content */
+    main {
+      flex: 1;
+      padding: var(--space-6) 0;
+      overflow: visible;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 var(--space-4);
+    }
+    
+    .inputs-container {
+      padding: var(--space-4);
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+    
+    @media (min-width: 768px) {
+      .inputs {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      padding: var(--space-3);
+      background: var(--card-bg);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .input-actions {
+      display: flex;
+      gap: var(--space-1);
+    }
+    
+    .input-group label {
+      font-weight: 600;
+      color: var(--primary);
+      margin: 0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .hint {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: normal;
+    }
+    
+    .textarea-container {
+      position: relative;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--input-bg);
+      overflow: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    
+    .line-numbers {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50px;
+      background: var(--bg-darker);
+      color: var(--text-secondary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 18.2px;
+      padding: 12px 8px;
+      text-align: right;
+      user-select: none;
+      pointer-events: none;
+      border-right: 1px solid var(--border-color);
+      white-space: pre-line;
+      overflow: hidden;
+      z-index: 1;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      padding-left: 60px;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-color);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 18.2px;
+      resize: vertical;
+      transition: none;
+      overflow-y: auto;
+      overflow-x: auto;
+      white-space: pre;
+      scroll-behavior: smooth;
+      outline: none;
+    }
+    
+    .textarea-container:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Diff viewer */
+    .diff-container {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      overflow: visible;
+      position: relative;
+      scroll-behavior: smooth;
+      pointer-events: none;
+    }
+    
+    .diff-header {
+      background: var(--bg-darker);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-2) var(--space-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .diff-title {
+      font-weight: 600;
+      color: var(--text-color);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .diff-status {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    #diff {
+      width: 100%;
+      height: auto;
+      min-height: 400px;
+      pointer-events: none;
+      user-select: none;
+    }
+    
+    /* Monaco editor line numbers fix */
+    .monaco-diff-editor .monaco-editor .margin {
+      width: 70px !important;
+    }
+    
+    .monaco-diff-editor .monaco-editor .line-numbers {
+      width: 65px !important;
+      text-align: center !important;
+      padding: 0 5px !important;
+      color: #666 !important;
+      font-size: 12px !important;
+      overflow: visible !important;
+    }
+    
+    .monaco-diff-editor .monaco-editor .margin-view-overlays {
+      width: 70px !important;
+    }
+    
+    /* Reports section */
+    .reports-container {
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border-light);
+      padding: var(--space-4);
+    }
+    
+    .reports {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+    
+    @media (min-width: 768px) {
+      .reports {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .report-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border-light);
+      border-radius: 0.5rem;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .report-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .report-list {
+      margin: 0;
+      padding-left: var(--space-6);
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+    
+    .report-list li {
+      margin: var(--space-1) 0;
+      line-height: 1.4;
+    }
+    
+    /* Footer */
+    footer {
+      background: var(--bg-main);
+      border-top: 1px solid var(--border-light);
+      padding: var(--space-6);
+      margin-top: auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      text-align: center;
+    }
+    
+    @media (min-width: 768px) {
+      .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+      }
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: var(--space-4);
+    }
+    
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+    
+    /* Utils */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--space-2);
+      height: 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      background: var(--bg-darker);
+      color: var(--text-secondary);
+    }
+    
+    .badge-primary {
+      background: var(--primary-light);
+      color: var(--text-white);
+    }
+    
+    .badge-success {
+      background: var(--success);
+      color: var(--text-white);
+    }
+    
+    .badge-warning {
+      background: var(--warning);
+      color: var(--text-white);
+    }
+    
+    .spacer {
+      flex: 1;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    /* Theme toggle */
+    .theme-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: var(--space-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+    }
+    
+    .theme-toggle:hover {
+      background: var(--bg-dark);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with logo and navigation -->
+  <header>
+    <div class="logo-container">
+      <div class="brand">
+        <i class="fas fa-code-branch"></i>
+        <span>PyDiff Pro</span>
+      </div>
+      <span class="tagline">Professional Python Code Comparison</span>
+    </div>
+    <div class="controls">
+      <button id="sample" class="btn">
+        <i class="fas fa-file-code"></i>
+        Sample Code
+      </button>
+      <button id="swap" class="btn">
+        <i class="fas fa-exchange-alt"></i>
+        Swap
+      </button>
+      <button id="clear" class="btn">
+        <i class="fas fa-eraser"></i>
+        Clear
+      </button>
+      <button id="compare" class="btn btn-primary">
+        <i class="fas fa-code-branch"></i>
+        Compare
+      </button>
+      <button id="toggle-theme" class="theme-toggle" aria-label="Toggle dark/light mode">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Input section -->
+    <div class="inputs-container">
+      <div class="container">
+        <div class="inputs">
+          <div class="input-group">
+            <div class="input-header">
+              <label for="left">Original Code</label>
+              <div class="input-actions">
+                <button id="copy-left" class="btn btn-sm btn-outline" title="Copy original code">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button id="clear-left" class="btn btn-sm btn-outline" title="Clear original code">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="textarea-container">
+              <div class="line-numbers" id="left-line-numbers"></div>
+              <textarea id="left" placeholder="Paste your original Python code here..."></textarea>
+            </div>
+          </div>
+          <div class="input-group">
+            <div class="input-header">
+              <label for="right">Modified Code</label>
+              <div class="input-actions">
+                <button id="copy-right" class="btn btn-sm btn-outline" title="Copy modified code">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button id="clear-right" class="btn btn-sm btn-outline" title="Clear modified code">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="textarea-container">
+              <div class="line-numbers" id="right-line-numbers"></div>
+              <textarea id="right" placeholder="Paste your modified Python code here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diff viewer -->
+    <div class="diff-container">
+      <div class="diff-header">
+        <div class="diff-title">
+          <i class="fas fa-code-branch"></i>
+          Code Comparison Result
+        </div>
+        <div class="diff-status" id="diff-status">Ready for comparison</div>
+      </div>
+      <div id="diff"></div>
+    </div>
+
+    <!-- Reports section -->
+    <div class="reports-container">
+      <div class="container">
+        <div class="reports">
+          <div class="report-card">
+            <div class="report-header">
+              <div class="report-title">
+                <i class="fas fa-list-check"></i>
+                Indentation Report — Left (Original)
+              </div>
+              <span class="badge" id="left-issues-count">0 issues</span>
+            </div>
+            <ul id="report-left" class="report-list"></ul>
+          </div>
+          <div class="report-card">
+            <div class="report-header">
+              <div class="report-title">
+                <i class="fas fa-list-check"></i>
+                Indentation Report — Right (Modified)
+              </div>
+              <span class="badge" id="right-issues-count">0 issues</span>
+            </div>
+            <ul id="report-right" class="report-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div>
+          &copy; 2025 PyDiff Pro - Professional Python Code Comparison Tool
+        </div>
+        <div class="footer-links">
+          <a href="#">About</a>
+          <a href="#">Documentation</a>
+          <a href="#">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Monaco loader via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script>
+    // App state
+    const state = {
+      theme: {
+        ui: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+        editor: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'vs-dark' : 'vs'
+      }
+    };
+
+    // Configure Monaco to load from CDN and use data-URL workers so it works from file:// too
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+    window.MonacoEnvironment = {
+      getWorkerUrl: function (moduleId, label) {
+        const base = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/';
+        const code = `self.MonacoEnvironment={baseUrl:'${base}'};importScripts('${base}vs/base/worker/workerMain.js');`;
+        return `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`;
+      }
+    };
+
+    // Editor state
+    let diffEditor, leftModel, rightModel;
+
+    // DOM elements
+    const elements = {
+      left: document.getElementById('left'),
+      right: document.getElementById('right'),
+      leftLineNumbers: document.getElementById('left-line-numbers'),
+      rightLineNumbers: document.getElementById('right-line-numbers'),
+      leftIssuesCount: document.getElementById('left-issues-count'),
+      rightIssuesCount: document.getElementById('right-issues-count'),
+      themeToggle: document.getElementById('toggle-theme'),
+      themeIcon: document.querySelector('#toggle-theme i'),
+      diffStatus: document.getElementById('diff-status')
+    };
+
+    // Create Monaco diff editor
+    function createEditor() {
+      require(['vs/editor/editor.main'], function () {
+        const container = document.getElementById('diff');
+        diffEditor = monaco.editor.createDiffEditor(container, {
+          automaticLayout: true,
+          theme: state.theme.editor,
+          readOnly: true,
+          renderSideBySide: true,
+          originalEditable: false,
+          scrollBeyondLastLine: false,
+          renderIndicators: true,
+          diffWordWrap: 'off',
+          renderValidationDecorations: 'on',
+          enableSplitViewResizing: false,
+          renderMarginRevertIcon: false,
+          renderOverviewRuler: false,
+          minimap: { enabled: false },
+          lineNumbers: 'on',
+          lineNumbersMinChars: 4,
+          folding: false,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+          fontSize: 13,
+          scrollbar: {
+            vertical: 'hidden',
+            horizontal: 'hidden'
+          },
+          contextmenu: false,
+          selectOnLineNumbers: false,
+          selectionHighlight: false,
+          occurrencesHighlight: false,
+          wordHighlight: false,
+          wordHighlightDelay: 0
+        });
+
+        leftModel = monaco.editor.createModel('', 'python');
+        rightModel = monaco.editor.createModel('', 'python');
+        diffEditor.setModel({ original: leftModel, modified: rightModel });
+
+        // Ensure glyph margin on child editors for potential future markers and make them read-only
+        diffEditor.getOriginalEditor().updateOptions({ 
+          readOnly: true,
+          lineNumbers: 'on',
+          lineNumbersMinChars: 4
+        });
+        diffEditor.getModifiedEditor().updateOptions({ 
+          readOnly: true,
+          lineNumbers: 'on',
+          lineNumbersMinChars: 4
+        });
+
+        // Initialize with sample if no content
+        if (!elements.left.value && !elements.right.value) {
+          loadSampleCode();
+        }
+        
+        // Auto-resize diff editor based on content
+        const resizeDiffEditor = () => {
+          if (!diffEditor || !leftModel || !rightModel) return;
+          
+          const leftLines = leftModel.getLineCount();
+          const rightLines = rightModel.getLineCount();
+          const maxLines = Math.max(leftLines, rightLines, 10);
+          const newHeight = Math.min(maxLines * 19 + 50, 800); // 19px per line + padding
+          
+          container.style.height = newHeight + 'px';
+          diffEditor.layout();
+        };
+        
+        // Listen for model changes to auto-resize
+        leftModel.onDidChangeContent(resizeDiffEditor);
+        rightModel.onDidChangeContent(resizeDiffEditor);
+      });
+    }
+
+    // Update line numbers for textarea
+    function updateLineNumbers(textarea, lineNumbersEl) {
+      const text = textarea.value || ' ';
+      const lines = text.split('\n');
+      const lineCount = lines.length;
+      
+      // Generate line numbers
+      let lineNumbers = '';
+      for (let i = 1; i <= lineCount; i++) {
+        lineNumbers += i + '\n';
+      }
+      
+      lineNumbersEl.textContent = lineNumbers.trim();
+      
+      // Match the height and scroll position
+      lineNumbersEl.style.height = textarea.scrollHeight + 'px';
+      lineNumbersEl.scrollTop = textarea.scrollTop;
+    }
+    
+    // Update editor models with new content
+    function updateModels(left, right) {
+      if (!leftModel || !rightModel) return;
+      leftModel.setValue(left ?? '');
+      rightModel.setValue(right ?? '');
+      
+      // Update diff status
+      const leftLines = left ? left.split('\n').length : 0;
+      const rightLines = right ? right.split('\n').length : 0;
+      elements.diffStatus.textContent = `Comparing ${leftLines} vs ${rightLines} lines`;
+      
+      // Auto-resize after content update
+      setTimeout(() => {
+        if (diffEditor) {
+          const container = document.getElementById('diff');
+          const leftLines = leftModel.getLineCount();
+          const rightLines = rightModel.getLineCount();
+          const maxLines = Math.max(leftLines, rightLines, 10);
+          const newHeight = Math.min(maxLines * 19 + 50, 800);
+          
+          container.style.height = newHeight + 'px';
+          diffEditor.layout();
+        }
+      }, 100);
+      
+      runIndentAnalysis();
+    }
+
+    // Set editor theme
+    function setEditorTheme(themeName) {
+      state.theme.editor = themeName;
+      if (window.monaco) {
+        monaco.editor.setTheme(themeName);
+      }
+    }
+
+    // Toggle UI theme between light and dark
+    function toggleTheme() {
+      const newTheme = state.theme.ui === 'dark' ? 'light' : 'dark';
+      state.theme.ui = newTheme;
+      
+      // Update body class
+      document.body.classList.toggle('dark', newTheme === 'dark');
+      
+      // Update editor theme
+      setEditorTheme(newTheme === 'dark' ? 'vs-dark' : 'vs');
+      
+      // Update theme toggle icon
+      elements.themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    // Load sample code
+    function loadSampleCode() {
+      const left = `def fib(n: int) -> int:\n    if n <= 1:\n        return n\n    return fib(n-1) + fib(n-2)\n\nprint(fib(10))\n`;
+      const right = `from functools import lru_cache\n\n@lru_cache(None)\ndef fib(n: int) -> int:\n    if n < 2:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n+1):\n        a, b = b, a + b\n    return b\n\nif __name__ == '__main__':\n    print(fib(10))\n`;
+      
+      elements.left.value = left;
+      elements.right.value = right;
+      
+      // Update line numbers for both textareas
+      updateLineNumbers(elements.left, elements.leftLineNumbers);
+      updateLineNumbers(elements.right, elements.rightLineNumbers);
+      
+      updateModels(left, right);
+    }
+
+    // Clear all code
+    function clearCode() {
+      elements.left.value = '';
+      elements.right.value = '';
+      updateModels('', '');
+    }
+    
+    // Clear left code only
+    function clearLeftCode() {
+      elements.left.value = '';
+      setTimeout(() => updateLineNumbers(elements.left, elements.leftLineNumbers), 10);
+      updateModels(elements.left.value, elements.right.value);
+    }
+    
+    // Clear right code only
+    function clearRightCode() {
+      elements.right.value = '';
+      setTimeout(() => updateLineNumbers(elements.right, elements.rightLineNumbers), 10);
+      updateModels(elements.left.value, elements.right.value);
+    }
+    
+    // Copy left code to clipboard
+    function copyLeftCode() {
+      navigator.clipboard.writeText(elements.left.value).then(() => {
+        // Visual feedback
+        const btn = document.getElementById('copy-left');
+        const icon = btn.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => {
+          icon.className = 'fas fa-copy';
+        }, 1000);
+      });
+    }
+    
+    // Copy right code to clipboard
+    function copyRightCode() {
+      navigator.clipboard.writeText(elements.right.value).then(() => {
+        // Visual feedback
+        const btn = document.getElementById('copy-right');
+        const icon = btn.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => {
+          icon.className = 'fas fa-copy';
+        }, 1000);
+      });
+    }
+
+    // Swap left and right code
+    function swapCode() {
+      const leftValue = elements.left.value;
+      elements.left.value = elements.right.value;
+      elements.right.value = leftValue;
+      updateModels(elements.left.value, elements.right.value);
+    }
+
+    // ------------ Indentation Analysis -------------
+    function analyzeIndentation(text) {
+      const issues = [];
+      const markers = [];
+      const lines = text.split('\n');
+      let indentStack = [0]; // Stack to track expected indentation levels
+      const toSpaces = (s) => s.replace(/\t/g, '    ');
+      const isCommentOnly = (t) => t.trim().startsWith('#') || t.trim() === '';
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        
+        // Skip empty lines and comments
+        if (isCommentOnly(line)) {
+          continue;
+        }
+        
+        const wsMatch = line.match(/^(\s*)/);
+        const ws = wsMatch ? wsMatch[1] : '';
+        const tabs = (ws.match(/\t/g) || []).length;
+        const spaces = ws.length - tabs;
+        const visual = toSpaces(ws).length;
+
+        const add = (message) => {
+          issues.push(`Line ${i + 1}: ${message}`);
+          if (window.monaco) {
+            markers.push({
+              startLineNumber: i + 1,
+              startColumn: 1,
+              endLineNumber: i + 1,
+              endColumn: Math.max(2, line.length + 1),
+              message,
+              severity: monaco.MarkerSeverity.Warning,
+            });
+          }
+        };
+
+        // Check for mixed tabs and spaces
+        if (tabs > 0 && spaces > 0) {
+          add(`❌ MIXED INDENTATION: Line uses both ${tabs} tabs and ${spaces} spaces. Fix: Use only spaces (4 spaces per indent level)`);
+        }
+        
+        // Check for tabs (prefer spaces)
+        if (tabs > 0 && spaces === 0) {
+          add(`⚠️ TAB USAGE: Line uses ${tabs} tabs. Fix: Replace with ${tabs * 4} spaces (4 spaces = 1 tab)`);
+        }
+
+        // Check for proper indentation (multiples of 4 spaces)
+        if (tabs === 0 && visual % 4 !== 0) {
+          const correctIndent = Math.round(visual / 4) * 4;
+          add(`❌ WRONG INDENT: ${visual} spaces used. Fix: Use ${correctIndent} spaces (must be multiple of 4)`);
+        }
+        
+        // Check indentation level consistency
+        const currentIndent = visual;
+        const expectedIndent = indentStack[indentStack.length - 1];
+        
+        // Handle dedentation - find matching indentation level
+        if (currentIndent < expectedIndent) {
+          let found = false;
+          while (indentStack.length > 1 && indentStack[indentStack.length - 1] > currentIndent) {
+            indentStack.pop();
+          }
+          if (indentStack[indentStack.length - 1] !== currentIndent) {
+            add(`❌ DEDENT ERROR: Expected ${indentStack[indentStack.length - 1]} spaces to match previous block level. Fix: Use ${indentStack[indentStack.length - 1]} spaces`);
+          }
+        }
+        
+        // Handle same level or indentation
+        else if (currentIndent > expectedIndent) {
+          // Check if previous line ended with colon (should indent)
+          let prevNonEmptyLine = '';
+          for (let j = i - 1; j >= 0; j--) {
+            const prevLine = lines[j].trim();
+            if (prevLine && !prevLine.startsWith('#')) {
+              prevNonEmptyLine = prevLine;
+              break;
+            }
+          }
+          
+          if (prevNonEmptyLine.endsWith(':')) {
+            // Expected indentation after colon
+            if (currentIndent !== expectedIndent + 4) {
+              add(`❌ BLOCK INDENT: After colon (:), expected ${expectedIndent + 4} spaces but got ${currentIndent}. Fix: Use ${expectedIndent + 4} spaces`);
+            } else {
+              indentStack.push(currentIndent);
+            }
+          } else {
+            add(`❌ UNEXPECTED INDENT: No reason to indent here. Expected ${expectedIndent} spaces. Fix: Remove extra indentation`);
+          }
+        }
+        
+        // Check for missing indentation after colon
+        if (trimmed.endsWith(':') && !trimmed.startsWith('#')) {
+          // Next non-empty line should be indented
+          let nextLineIndent = null;
+          for (let j = i + 1; j < lines.length; j++) {
+            const nextLine = lines[j];
+            if (nextLine.trim() && !nextLine.trim().startsWith('#')) {
+              nextLineIndent = toSpaces(nextLine.match(/^(\s*)/)[1]).length;
+              break;
+            }
+          }
+          
+          if (nextLineIndent !== null && nextLineIndent <= currentIndent) {
+            // Will be caught on the next line, but we can add context here
+          }
+        }
+      }
+
+      return { issues, markers };
+    }
+
+    // Render indentation report
+    function renderReport(listId, issues, countId) {
+      const ul = document.getElementById(listId);
+      const countEl = document.getElementById(countId);
+      
+      // Update count badge
+      countEl.textContent = issues.length ? `${issues.length} issues` : 'No issues';
+      countEl.className = issues.length ? 'badge badge-warning' : 'badge badge-success';
+      
+      // Update list
+      ul.innerHTML = '';
+      if (!issues.length) {
+        const li = document.createElement('li');
+        li.textContent = 'No indentation issues detected.';
+        ul.appendChild(li);
+        return;
+      }
+      
+      for (const msg of issues) {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        ul.appendChild(li);
+      }
+    }
+
+    // Run indentation analysis
+    function runIndentAnalysis() {
+      if (!window.monaco || !leftModel || !rightModel) return;
+      
+      const left = analyzeIndentation(leftModel.getValue());
+      const right = analyzeIndentation(rightModel.getValue());
+      
+      monaco.editor.setModelMarkers(leftModel, 'indent-analysis', left.markers);
+      monaco.editor.setModelMarkers(rightModel, 'indent-analysis', right.markers);
+      
+      renderReport('report-left', left.issues, 'left-issues-count');
+      renderReport('report-right', right.issues, 'right-issues-count');
+    }
+
+    // Initialize UI theme based on system preference
+    function initTheme() {
+      document.body.classList.toggle('dark', state.theme.ui === 'dark');
+      elements.themeIcon.className = state.theme.ui === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    // Event listeners
+    document.getElementById('compare').addEventListener('click', () => {
+      updateModels(elements.left.value, elements.right.value);
+    });
+    
+    document.getElementById('swap').addEventListener('click', swapCode);
+    document.getElementById('clear').addEventListener('click', clearCode);
+    document.getElementById('clear-left').addEventListener('click', clearLeftCode);
+    document.getElementById('clear-right').addEventListener('click', clearRightCode);
+    document.getElementById('copy-left').addEventListener('click', copyLeftCode);
+    document.getElementById('copy-right').addEventListener('click', copyRightCode);
+    document.getElementById('toggle-theme').addEventListener('click', toggleTheme);
+    document.getElementById('sample').addEventListener('click', loadSampleCode);
+    
+    // Line numbers sync
+    // Line number event listeners
+    elements.left.addEventListener('input', () => {
+      setTimeout(() => updateLineNumbers(elements.left, elements.leftLineNumbers), 10);
+    });
+    
+    elements.right.addEventListener('input', () => {
+      setTimeout(() => updateLineNumbers(elements.right, elements.rightLineNumbers), 10);
+    });
+    
+    elements.left.addEventListener('keyup', () => {
+      setTimeout(() => updateLineNumbers(elements.left, elements.leftLineNumbers), 10);
+    });
+    
+    elements.right.addEventListener('keyup', () => {
+      setTimeout(() => updateLineNumbers(elements.right, elements.rightLineNumbers), 10);
+    });
+    
+    elements.left.addEventListener('paste', () => {
+      setTimeout(() => updateLineNumbers(elements.left, elements.leftLineNumbers), 50);
+    });
+    
+    elements.right.addEventListener('paste', () => {
+      setTimeout(() => updateLineNumbers(elements.right, elements.rightLineNumbers), 50);
+    });
+    
+    elements.left.addEventListener('scroll', () => {
+      elements.leftLineNumbers.scrollTop = elements.left.scrollTop;
+    });
+    
+    elements.right.addEventListener('scroll', () => {
+      elements.rightLineNumbers.scrollTop = elements.right.scrollTop;
+    });
+    
+    // Initialize line numbers
+    setTimeout(() => {
+      updateLineNumbers(elements.left, elements.leftLineNumbers);
+      updateLineNumbers(elements.right, elements.rightLineNumbers);
+    }, 100);
+
+    // Initialize
+    initTheme();
+    createEditor();
+
+    // Resize observer to handle layout when textareas resize
+    const ro = new ResizeObserver(() => {
+      if (diffEditor) diffEditor.layout();
+    });
+    ro.observe(document.body);
+  </script>
+</body>
+</html>
